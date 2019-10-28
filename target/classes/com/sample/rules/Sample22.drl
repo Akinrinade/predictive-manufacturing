@@ -1,0 +1,15 @@
+package simple 
+
+rule "Test1"
+    ruleflow-group Check Input
+when
+    (
+    $conveyor : IndividualConveyor( name==ConveyorA, time>10 )  and
+    not( 
+    Bar( a+b==c )   ) ) 
+then
+System.out.println();
+
+end
+
+
