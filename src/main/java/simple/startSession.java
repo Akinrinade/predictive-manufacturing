@@ -25,9 +25,9 @@ public class startSession {
 
                     ListIterator new_read= (ListIterator) newread.values().iterator();
                     Double newAverage = 34.0;
-                    conveyorThresholds t_time = new conveyorThresholds();
-                    t_time.setTtime(newAverage);
-                    kSession.insert(t_time);
+                    //conveyorThresholds t_time = new conveyorThresholds();
+                    //t_time.setTtime(newAverage);
+                    kSession.insert(newAverage);
                     kSession.fireAllRules();
                 }
             }

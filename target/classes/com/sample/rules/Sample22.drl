@@ -1,14 +1,13 @@
 package simple 
 
+import simple.TransportTime
+
 rule "Test1"
-    ruleflow-group Check Input
 when
-    (
-    $conveyor : IndividualConveyor( name==ConveyorA, time>10 )  and
-    not( 
-    Bar( a+b==c )   ) ) 
+    
+    $conveyor : TransportTime( t_time>=2262.139341194926, t_time>=2239.657760254349 )   
 then
-System.out.println();
+System.out.println('nothing to do');
 
 end
 
