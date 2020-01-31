@@ -23,12 +23,15 @@ public class conveyorThresholds {
     //private String conveyor_name;
     private static Double  upper;
     private static Double lower;
+    private static String conveyor_name;
 
     public void setvalues(HashMap values){
         lower= (Double)values.get("lower");
         upper= (Double)values.get("upper");
+        conveyor_name = (String)values.get("conveyor_name");
 
     }
+
 
 }
 

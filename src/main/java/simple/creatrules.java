@@ -16,10 +16,13 @@ public class creatrules {
     @SuppressWarnings("restriction")
     public static class Drl_Creator {
 
-
-
-
         public static void create_drl(HashMap thresholds) throws ClassNotFoundException {
+            String conveyorName = (String) thresholds.get("conveyor_name");
+            String conveyorFile = conveyorName+".drl";
+            
+            String fpath = "/home/pi/IdeaProjects/predictive-manufacturing/src/main/resources/com/sample/rules/"+conveyorFile+"";
+
+
             PackageDescr pkg = DescrFactory.newPackage()
 
 
@@ -29,11 +32,11 @@ public class creatrules {
 
                     .lhs()
                     .and()
-                    .pattern("TransportTime").id( "$conveyor", false ).constraint("t_time>="+thresholds.get("upper")+"").constraint("t_time>="+thresholds.get("lower")+"").end()
+                    .pattern("TransportTime").id( "$conveyor", false ).constraint("t_time<="+thresholds.get("upper")+"").constraint("t_time<="+thresholds.get("lower")+"").end()
 
                     .end()
                     .end()
-                    .rhs( "System.out.println('nothing to do');" ).end()
+                    .rhs("System.out.println('ConveyoA nothing to do');" ).end()
                     .getDescr();
 
             ImportDescr importEntry4= new ImportDescr();
@@ -96,7 +99,7 @@ public class creatrules {
             try{
                 // create new file
                 //File file = new File("C:\\Users\\abisola.akinrinade\\Documents\\workspace\\simpleimplementation\\src\\main\\resources\\com\\sample\\rules\\Sample22.drl");
-                File file = new File("/home/pi/IdeaProjects/predictive-manufacturing/src/main/resources/com/sample/rules/Sample22.drl");
+                File file = new File(fpath);
                 if (file.exists()){
                     file.delete();
                     System.out.println(file.getName() + " is deleted!");

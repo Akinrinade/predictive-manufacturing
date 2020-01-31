@@ -30,8 +30,8 @@ public class ConveyorReads {
 	        return time;
 	    }
 
-	    public void setTime(Long price) {
-	        this.time = time;
+	    public void setTime(Long time) {
+	        this.time =(Long) time;
 	    }
 
 	    public String getAction() {

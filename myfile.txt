@@ -1,0 +1,182 @@
+
+Product delivery  FIPA convInitiator2
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.srcim2018.cyberphysicalagents.conveyoragent;
+
+import jade.core.Agent;
+import jade.lang.acl.ACLMessage;
+import jade.proto.AchieveREInitiator;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+/**
+ *
+ * @author joao
+ */
+public class FIPAConvInitiator2 extends AchieveREInitiator{
+    
+    ACLMessage informMessage;
+    
+    public FIPAConvInitiator2(Agent a, ACLMessage msg , ACLMessage msg2){
+        super(a, msg);
+        informMessage = msg2;
+    }
+
+    @Override
+    protected void handleAgree(ACLMessage agree) {
+        System.out.println(myAgent.getLocalName() + ": AGREE message received");
+        try {
+            ((ConveyorAgent)myAgent).csvWriter.append(myAgent.getLocalName() + ";Sent;" + System.currentTimeMillis() + "\n");
+            ((ConveyorAgent)myAgent).csvWriter.flush();
+        } catch (IOException ex) {
+            Logger.getLogger(FIPAConvInitiator2.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        ArrayList <String> str = ((ConveyorAgent)myAgent).HardwareDevices.callOperation(((ConveyorAgent)myAgent).DeviceID, 
+                               myAgent.getLocalName(), ((ConveyorAgent)myAgent).DeliverProduct, ((ConveyorAgent)myAgent).myInputs);
+        //System.out.println(str);
+        while(str==null){
+            str = ((ConveyorAgent)myAgent).HardwareDevices.callOperation(((ConveyorAgent)myAgent).DeviceID, 
+                               myAgent.getLocalName(), ((ConveyorAgent)myAgent).DeliverProduct, ((ConveyorAgent)myAgent).myInputs);
+            //System.out.println(str);
+        }
+        if(str.get(0).equalsIgnoreCase(myAgent.getLocalName() + "WITHOUT ANY PRODUCT")){
+            while(str.get(0).equalsIgnoreCase(myAgent.getLocalName() + "WITHOUT ANY PRODUCT")){
+                str = ((ConveyorAgent)myAgent).HardwareDevices.callOperation(((ConveyorAgent)myAgent).DeviceID, 
+                           myAgent.getLocalName(), ((ConveyorAgent)myAgent).DeliverProduct, ((ConveyorAgent)myAgent).myInputs);
+                //System.out.println(str);
+            }
+        }
+    }
+
+    @Override
+    protected void handleRefuse(ACLMessage refuse) {
+        System.out.println(myAgent.getLocalName() + ": REFUSE message received");
+
+        informMessage.setContent(myAgent.getLocalName());
+        myAgent.send(informMessage);
+    }
+
+    @Override
+    protected void handleInform(ACLMessage inform) {
+        System.out.println(myAgent.getLocalName() + ": INFORM message received");
+
+        if(inform.getContent() != null){
+            ArrayList <String> str = ((ConveyorAgent)myAgent).HardwareDevices.callOperation(((ConveyorAgent)myAgent).DeviceID, 
+                            myAgent.getLocalName(), "StopConveyor", ((ConveyorAgent)myAgent).myInputs); 
+            //System.out.println(str);
+            while(str==null){
+                str = ((ConveyorAgent)myAgent).HardwareDevices.callOperation(((ConveyorAgent)myAgent).DeviceID, 
+                                   myAgent.getLocalName(), "StopConveyor", ((ConveyorAgent)myAgent).myInputs);
+                //System.out.println(str);
+            }
+            
+        }
+        
+        ((ConveyorAgent)myAgent).Occupied = false;
+        informMessage.setContent(inform.getContent());
+        myAgent.send(informMessage);
+
+    }
+
+    @Override
+    protected void handleFailure(ACLMessage failure) {
+        
+        ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+        msg.setOntology("ConveyorToConveyor");
+        
+        ((ConveyorAgent)myAgent).addBehaviour(new FIPAConvInitiator2(myAgent, msg, this.informMessage));
+    }
+}
+
+
+
+
+CHeckSensorStatus product trasport start
+
+
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.srcim2018.cyberphysicalagents.conveyoragent;
+
+import jade.core.behaviours.OneShotBehaviour;
+import jade.lang.acl.ACLMessage;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+/**
+ *
+ * @author joao
+ */
+public class CheckSensorStatus extends OneShotBehaviour{
+    
+    protected boolean sensorStatus = false;
+    
+    @Override
+    public void action() {
+        while(!sensorStatus){
+            ArrayList <String> resp = ((ConveyorAgent)myAgent).HardwareDevices.callOperation(((ConveyorAgent)myAgent).DeviceID, myAgent.getLocalName(), "CheckSensor",((ConveyorAgent)myAgent).myInputs);
+            //System.out.println(resp);
+            if (resp.get(0).equalsIgnoreCase("true")){
+                sensorStatus = true;
+                try {
+                    ((ConveyorAgent)myAgent).csvWriter.append(myAgent.getLocalName() + ";Received;" + System.currentTimeMillis() + "\n");
+                    ((ConveyorAgent)myAgent).csvWriter.flush();
+                } catch (IOException ex) {
+                    Logger.getLogger(FIPAConvInitiator2.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                ACLMessage msg = ((ConveyorAgent)myAgent).msgToPreviousConv;
+                msg.setPerformative(ACLMessage.INFORM);
+                msg.setContent(myAgent.getLocalName());
+                myAgent.send(msg);
+
+            }
+            
+            
+        }
+    }
+    
+    
+}
+
+
+
+
+Compile specific DRL file
+
+private KieSession kieSession;
+
+public void build() throws Exception {
+    KieServices kieServices = KieServices.Factory.get();
+    KieFileSystem kfs = kieServices.newKieFileSystem();
+
+    // for each DRL file, referenced by a plain old path name:
+    FileInputStream fis = new FileInputStream( "simple/simple.drl" );
+    kfs.write( "src/main/resources/simple.drl",
+                kieServices.getResources().newInputStreamResource( fis ) );
+
+    KieBuilder kieBuilder = kieServices.newKieBuilder( kfs ).buildAll();
+    Results results = kieBuilder.getResults();
+    if( results.hasMessages( Message.Level.ERROR ) ){
+        System.out.println( results.getMessages() );
+        throw new IllegalStateException( "### errors ###" );
+    }
+
+    KieContainer kieContainer =
+    kieServices.newKieContainer( kieServices.getRepository().getDefaultReleaseId() );
+
+    KieBase kieBase = kieContainer.getKieBase();
+    kieSession = kieContainer.newKieSession();
+}
+
