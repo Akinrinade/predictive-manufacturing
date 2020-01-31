@@ -1,0 +1,14 @@
+package simple 
+
+import simple.TransportTime
+
+rule "Test1"
+when
+    
+    $conveyor : TransportTime( t_time<=2262.139341194926, t_time<=2239.657760254349 )   
+then
+System.out.println('ConveyoA nothing to do');
+
+end
+
+
